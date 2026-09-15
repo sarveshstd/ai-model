@@ -5,8 +5,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 // ─── Gemini config ────────────────────────────────────────────────────────────
-const GEMINI_MODEL    = "gemini-1.5-flash";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Models tried in order until one works (handles regional availability)
+const GEMINI_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash-8b",
+];
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const SYSTEM_INSTRUCTION = `You are an expert C Programming AI Tutor named "C Buddy". Your ONLY purpose is to help users with everything related to the C programming language.
 
@@ -308,11 +315,22 @@ async function handleSend() {
       },
     };
 
-    const res = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    // Try each model in order until one works (handles regional availability)
+    let res = null;
+    let usedModel = null;
+    for (const model of GEMINI_MODELS) {
+      const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.status !== 404) {
+        usedModel = model;
+        break;
+      }
+      // 404 means model not available — try next
+    }
 
     removeTyping(typingEl);
 
