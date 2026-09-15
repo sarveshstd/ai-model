@@ -1,92 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   C Buddy — app.js  (Static / GitHub Pages edition)
-   Calls Gemini REST API directly from the browser.
-   API key is stored in localStorage — never in source code.
+   C Buddy — app.js  (Vercel edition)
+   Sends messages to /api/chat (serverless backend).
+   No API key needed from the user — key lives securely on the server.
    ═══════════════════════════════════════════════════════════════════════════ */
-
-// ─── Gemini config ────────────────────────────────────────────────────────────
-// Models tried in order until one works (handles regional availability)
-const GEMINI_MODELS = [
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-flash-8b",
-];
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-
-const SYSTEM_INSTRUCTION = `You are an expert C Programming AI Tutor named "C Buddy". Your ONLY purpose is to help users with everything related to the C programming language.
-
-TOPICS YOU HANDLE:
-- Introduction to C, history, structure, compilers, IDEs
-- Compilation and execution process
-- Tokens, keywords, identifiers
-- Variables, constants, data types (int, float, char, double, etc.)
-- Operators (arithmetic, relational, logical, bitwise, assignment, conditional)
-- Input/output: printf(), scanf(), getchar(), putchar()
-- Conditional statements: if, if-else, nested if, switch
-- Loops: for, while, do-while; break and continue
-- Arrays (1D, 2D, multi-dimensional) and strings
-- Functions, function prototypes, recursion, inline functions
-- Pointers, pointer arithmetic, pointer to pointer, pointers and arrays
-- Structures, unions, enumerations (enum), typedef
-- Dynamic memory allocation: malloc(), calloc(), realloc(), free()
-- File handling: fopen(), fclose(), fread(), fwrite(), fprintf(), fscanf()
-- Preprocessor directives (#define, #include, #ifdef, macros)
-- Header files and creating custom header files
-- Storage classes: auto, extern, static, register
-- Command-line arguments: argc, argv
-- C standard library functions (string.h, math.h, stdlib.h, etc.)
-- Data structures in C: linked lists, stacks, queues, trees, graphs
-- Algorithms in C: sorting, searching, recursion
-- Debugging: syntax errors, logical errors, runtime errors, segmentation faults
-- Memory leaks, undefined behavior, buffer overflows
-- Code optimization and best practices
-
-RESPONSE BEHAVIOR:
-
-CONCEPTUAL QUESTIONS:
-- Start with a clear, simple definition.
-- Explain the concept progressively.
-- Provide a practical, compilable code example.
-- Explain the example step by step.
-- Mention common mistakes or edge cases when relevant.
-
-CODE GENERATION REQUESTS:
-- Provide COMPLETE, compilable, standard C code (C99/C11).
-- Add meaningful inline comments inside the code.
-- After the code, briefly explain how it works.
-- Show sample input/output where helpful.
-
-DEBUGGING REQUESTS (user sends broken code):
-- Identify ALL errors (syntax, logical, runtime, memory).
-- Explain WHY each error occurs.
-- Provide the fully corrected code.
-- Explain the exact changes made.
-
-OUTPUT PREDICTION ("what is the output?"):
-- Trace execution step by step.
-- Give the exact, correct output.
-- Explain each step of the trace.
-- If the output involves undefined behavior, explicitly state this.
-
-EXAM ANSWERS:
-- Structure your answer with: Definition → Explanation → Syntax → Example Code → Output.
-- Keep language simple and suitable for a college student.
-
-FOLLOW-UP QUESTIONS:
-- Always consider prior conversation context.
-- Never ask the user to repeat something they already shared in this session.
-
-CODE FORMAT:
-- Always wrap C code in triple backtick code blocks with the language tag.
-- Keep code clean and properly indented (4 spaces).
-
-OFF-TOPIC HANDLING:
-If the user asks something unrelated to C programming or computer science, respond with:
-"I'm C Buddy, specialized in C programming. I can help you with C concepts, writing programs, debugging, data structures, algorithms, and more. Please ask me a C-related question! 😊"
-
-TONE: Friendly, patient, encouraging — like a knowledgeable senior student or tutor. Use simple English suitable for a beginner or college-level student.`;
 
 // ─── Topic / Sample data ──────────────────────────────────────────────────────
 const TOPICS = [
@@ -139,7 +55,7 @@ renderer.code = function (code, language) {
 marked.use({ renderer });
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let conversationHistory = []; // [{role:"user"|"model", parts:[{text}]}]
+let conversationHistory = [];
 let isStreaming = false;
 
 // ─── DOM refs ──────────────────────────────────────────────────────────────────
@@ -150,64 +66,33 @@ const sendBtnEl      = document.getElementById("sendBtn");
 const newChatBtnEl   = document.getElementById("newChatBtn");
 const topicListEl    = document.getElementById("topicList");
 const sampleGridEl   = document.getElementById("sampleGrid");
-const welcomeEl      = document.getElementById("welcomeScreen");
 const statusDotEl    = document.getElementById("statusDot");
 const sidebarEl      = document.getElementById("sidebar");
 const menuBtnEl      = document.getElementById("menuBtn");
 const sidebarCloseEl = document.getElementById("sidebarClose");
 const overlayEl      = document.getElementById("sidebarOverlay");
 
-// API key modal refs
-const apiModalEl        = document.getElementById("apiKeyModal");
-const apiKeyInputEl     = document.getElementById("apiKeyInput");
-const saveKeyBtnEl      = document.getElementById("saveKeyBtn");
-const changeKeyBtnEl    = document.getElementById("changeKeyBtn");
-const apiKeyToggleBtnEl = document.getElementById("apiKeyToggleBtn");
-
 // ─── Init ─────────────────────────────────────────────────────────────────────
 (function init() {
   buildTopicList();
   buildSampleGrid();
   bindEvents();
-  checkApiKey();
+  pingServer();
 })();
 
-// ─── API key management ───────────────────────────────────────────────────────
-
-function getApiKey() {
-  return localStorage.getItem("cbuddy_gemini_key") || "";
-}
-
-function saveApiKey(key) {
-  localStorage.setItem("cbuddy_gemini_key", key.trim());
-}
-
-function clearApiKey() {
-  localStorage.removeItem("cbuddy_gemini_key");
-}
-
-function checkApiKey() {
-  if (!getApiKey()) {
-    showApiModal();
-  } else {
-    hideApiModal();
-    setStatusOnline();
+// ─── Server health check ──────────────────────────────────────────────────────
+async function pingServer() {
+  try {
+    const r = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "hi", history: [] }),
+    });
+    statusDotEl.classList.toggle("online", r.ok);
+    statusDotEl.classList.toggle("error", !r.ok);
+  } catch {
+    statusDotEl.classList.add("error");
   }
-}
-
-function showApiModal() {
-  apiModalEl.classList.add("visible");
-  apiKeyInputEl.value = "";
-  setTimeout(() => apiKeyInputEl.focus(), 300);
-}
-
-function hideApiModal() {
-  apiModalEl.classList.remove("visible");
-}
-
-function setStatusOnline() {
-  statusDotEl.classList.add("online");
-  statusDotEl.classList.remove("error");
 }
 
 // ─── Build sidebar topics ─────────────────────────────────────────────────────
@@ -239,40 +124,9 @@ function bindEvents() {
   });
   sendBtnEl.addEventListener("click", handleSend);
   newChatBtnEl.addEventListener("click", resetChat);
-
-  // Mobile sidebar
   menuBtnEl.addEventListener("click", openSidebar);
   sidebarCloseEl.addEventListener("click", closeSidebar);
   overlayEl.addEventListener("click", closeSidebar);
-
-  // API key modal
-  saveKeyBtnEl.addEventListener("click", onSaveKey);
-  changeKeyBtnEl.addEventListener("click", showApiModal);
-  apiKeyInputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") onSaveKey();
-  });
-
-  // Toggle show/hide API key input
-  if (apiKeyToggleBtnEl) {
-    apiKeyToggleBtnEl.addEventListener("click", () => {
-      const isPassword = apiKeyInputEl.type === "password";
-      apiKeyInputEl.type = isPassword ? "text" : "password";
-      apiKeyToggleBtnEl.textContent = isPassword ? "🙈" : "👁";
-    });
-  }
-}
-
-function onSaveKey() {
-  const key = apiKeyInputEl.value.trim();
-  if (!key || key.length < 20) {
-    apiKeyInputEl.classList.add("shake");
-    setTimeout(() => apiKeyInputEl.classList.remove("shake"), 600);
-    apiKeyInputEl.placeholder = "Paste your full Gemini API key from aistudio.google.com";
-    return;
-  }
-  saveApiKey(key);
-  hideApiModal();
-  setStatusOnline();
 }
 
 function onInputChange() {
@@ -286,9 +140,6 @@ async function handleSend() {
   const text = userInputEl.value.trim();
   if (!text || isStreaming) return;
 
-  const apiKey = getApiKey();
-  if (!apiKey) { showApiModal(); return; }
-
   hideWelcome();
   addUserMessage(text);
 
@@ -297,80 +148,46 @@ async function handleSend() {
   sendBtnEl.disabled = true;
   isStreaming = true;
 
-  // Add to history
   conversationHistory.push({ role: "user", parts: [{ text }] });
 
   const typingEl = showTyping();
 
   try {
-    // Build request body for Gemini REST API
-    const body = {
-      system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: conversationHistory,
-      generationConfig: {
-        temperature: 0.4,
-        topP: 0.9,
-        topK: 40,
-        maxOutputTokens: 8192,
-      },
-    };
-
-    // Try each model in order until one works (handles regional availability)
-    let res = null;
-    let usedModel = null;
-    for (const model of GEMINI_MODELS) {
-      const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status !== 404) {
-        usedModel = model;
-        break;
-      }
-      // 404 means model not available — try next
-    }
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        history: conversationHistory.slice(0, -1), // history before current msg
+      }),
+    });
 
     removeTyping(typingEl);
 
-    if (res.status === 400 || res.status === 401 || res.status === 403) {
-      const errData = await res.json().catch(() => ({}));
-      const msg = errData?.error?.message || "Invalid API key.";
-      addAiMessage(`⚠️ **API Key Error:** ${msg}\n\nPlease update your Gemini API key using the key button in the header.`);
-      conversationHistory.pop();
-      clearApiKey();
-      statusDotEl.classList.remove("online");
-      statusDotEl.classList.add("error");
-      return;
-    }
-
     if (!res.ok) {
-      addAiMessage(`⚠️ **Error ${res.status}:** Something went wrong. Please try again.`);
+      const errData = await res.json().catch(() => ({}));
+      addAiMessage(`⚠️ **Error ${res.status}:** ${errData.error || "Something went wrong. Please try again."}`);
       conversationHistory.pop();
+      statusDotEl.classList.add("error");
+      statusDotEl.classList.remove("online");
       return;
     }
 
     const data = await res.json();
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text
-      || "Sorry, I didn't receive a response. Please try again.";
+    const reply = data.reply || "Sorry, I didn't get a response. Please try again.";
 
     addAiMessage(reply);
-
-    // Add model reply to history
     conversationHistory.push({ role: "model", parts: [{ text: reply }] });
 
-    // Cap history at 40 entries (20 exchanges)
     if (conversationHistory.length > 40) {
       conversationHistory = conversationHistory.slice(-40);
     }
 
-    setStatusOnline();
-  } catch (err) {
+    statusDotEl.classList.add("online");
+    statusDotEl.classList.remove("error");
+  } catch {
     removeTyping(typingEl);
-    addAiMessage(
-      `⚠️ **Network Error:** Could not reach the Gemini API.\n\nPlease check your internet connection and try again.`
-    );
+    addAiMessage("⚠️ **Network error.** Please check your connection and try again.");
     conversationHistory.pop();
     statusDotEl.classList.add("error");
     statusDotEl.classList.remove("online");
@@ -411,17 +228,15 @@ function addUserMessage(text) {
 function addAiMessage(markdown) {
   const row = document.createElement("div");
   row.className = "msg-row";
-  const html = marked.parse(markdown);
   row.innerHTML = `
     <div class="msg-avatar ai-av">⚙</div>
     <div class="msg-content">
       <div class="msg-label">C Buddy</div>
-      <div class="msg-bubble">${html}</div>
+      <div class="msg-bubble">${marked.parse(markdown)}</div>
     </div>`;
   messagesEl.appendChild(row);
-
   if (window.Prism) {
-    row.querySelectorAll("pre code").forEach((block) => Prism.highlightElement(block));
+    row.querySelectorAll("pre code").forEach(b => Prism.highlightElement(b));
   }
   scrollToBottom();
 }
@@ -474,8 +289,7 @@ function resetChat() {
   sendBtnEl.disabled = true;
   userInputEl.value = "";
   userInputEl.style.height = "auto";
-  const welcome = buildWelcomeScreen();
-  chatAreaEl.insertBefore(welcome, messagesEl);
+  chatAreaEl.insertBefore(buildWelcomeScreen(), messagesEl);
   closeSidebar();
 }
 
@@ -509,13 +323,5 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// ─── Mobile sidebar ───────────────────────────────────────────────────────────
-function openSidebar() {
-  sidebarEl.classList.add("open");
-  overlayEl.classList.add("active");
-}
-
-function closeSidebar() {
-  sidebarEl.classList.remove("open");
-  overlayEl.classList.remove("active");
-}
+function openSidebar() { sidebarEl.classList.add("open"); overlayEl.classList.add("active"); }
+function closeSidebar() { sidebarEl.classList.remove("open"); overlayEl.classList.remove("active"); }
