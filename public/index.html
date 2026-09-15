@@ -4,21 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C Buddy — AI C Programming Assistant</title>
-  <meta name="description" content="An AI-powered C Programming Tutor that explains concepts, writes code, debugs programs, and teaches C from beginner to advanced." />
+  <meta name="description" content="An AI-powered C Programming Tutor — explains concepts, writes code, debugs programs, and teaches C from beginner to advanced." />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
 
-  <!-- Prism.js — C syntax highlighting -->
+  <!-- Prism.js — syntax highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css" />
 
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ═══════════════════════════  SIDEBAR  ═══════════════════════════ -->
+  <!-- ══════════════════  API KEY MODAL  ══════════════════ -->
+  <div class="modal-overlay" id="apiKeyModal">
+    <div class="modal-card">
+      <div class="modal-logo">⚙</div>
+      <h2 class="modal-title">Welcome to C Buddy</h2>
+      <p class="modal-sub">
+        Enter your free <strong>Gemini API key</strong> to start chatting.<br/>
+        Your key is stored only in your browser — never on any server.
+      </p>
+      <a class="modal-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+        🔑 Get a free API key from Google AI Studio →
+      </a>
+      <div class="modal-input-wrap">
+        <input
+          id="apiKeyInput"
+          type="password"
+          class="modal-input"
+          placeholder="Paste your Gemini API key here (AIza...)"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="apiKeyToggleBtn" class="key-toggle-btn" title="Show / hide key">👁</button>
+      </div>
+      <button id="saveKeyBtn" class="modal-save-btn">Start Chatting →</button>
+      <p class="modal-note">🔒 Stored securely in your browser's localStorage</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════  SIDEBAR  ══════════════════ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="logo">
@@ -35,16 +62,14 @@
     </div>
 
     <div class="sidebar-section-label">Quick Topics</div>
-    <div class="topic-list" id="topicList">
-      <!-- Topics injected by app.js -->
-    </div>
+    <div class="topic-list" id="topicList"></div>
 
     <div class="sidebar-footer">
       <div class="sidebar-tag">Powered by Gemini 1.5 Flash</div>
     </div>
   </aside>
 
-  <!-- ═══════════════════════════  MAIN  ══════════════════════════════ -->
+  <!-- ══════════════════  MAIN  ══════════════════ -->
   <div class="main-wrap" id="mainWrap">
 
     <!-- Header -->
@@ -56,29 +81,26 @@
         <span class="header-badge">AI</span>
       </div>
       <div class="header-right">
-        <div class="status-dot" id="statusDot" title="Server status"></div>
+        <button class="change-key-btn" id="changeKeyBtn" title="Change API Key">🔑</button>
+        <div class="status-dot" id="statusDot" title="API status"></div>
       </div>
     </header>
 
     <!-- Chat area -->
     <main class="chat-area" id="chatArea">
 
-      <!-- Welcome screen (shown until first message) -->
+      <!-- Welcome screen -->
       <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-glow"></div>
         <div class="welcome-avatar">⚙</div>
         <h1 class="welcome-title">C Buddy</h1>
         <p class="welcome-sub">Your personal AI C Programming Tutor</p>
-
         <div class="sample-questions-label">Try asking me about…</div>
-        <div class="sample-grid" id="sampleGrid">
-          <!-- Populated by app.js -->
-        </div>
+        <div class="sample-grid" id="sampleGrid"></div>
       </div>
 
       <!-- Messages -->
       <div class="messages" id="messages"></div>
-
     </main>
 
     <!-- Input bar -->
@@ -87,7 +109,7 @@
         <textarea
           id="userInput"
           class="chat-input"
-          placeholder="Ask C Buddy anything about C programming…"
+          placeholder="Ask C Buddy anything about C programming… (Enter to send, Shift+Enter for new line)"
           rows="1"
           spellcheck="true"
           aria-label="Your message"
@@ -106,10 +128,8 @@
   <!-- Sidebar overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- ═══════════════════════════  SCRIPTS  ════════════════════════════ -->
-  <!-- Marked.js — Markdown rendering -->
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
-  <!-- Prism.js core + C language + toolbar plugin -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
   <script src="app.js"></script>

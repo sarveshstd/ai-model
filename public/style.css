@@ -605,3 +605,153 @@ textarea { font-family: var(--font-ui); }
   .menu-btn { display: block; }
   .sample-grid { grid-template-columns: 1fr; max-width: 100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   API KEY MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 20px;
+  padding: 36px 32px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 80px rgba(0,212,255,0.1), 0 30px 60px rgba(0,0,0,0.5);
+  animation: fadeInUp 0.4s ease;
+}
+
+.modal-logo {
+  font-size: 52px;
+  background: linear-gradient(135deg, var(--accent), #7b61ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.modal-sub {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.modal-sub strong { color: var(--accent); }
+
+.modal-link {
+  display: inline-block;
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid var(--border-accent);
+  border-radius: 99px;
+  margin-bottom: 20px;
+  transition: background var(--transition);
+}
+.modal-link:hover { background: var(--accent-dim); }
+
+.modal-input-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-code);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.modal-input:focus { border-color: var(--border-accent); }
+.modal-input::placeholder { color: var(--text-faint); font-family: var(--font-ui); font-size: 12.5px; }
+
+.key-toggle-btn {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0.5;
+  transition: opacity var(--transition);
+}
+.key-toggle-btn:hover { opacity: 1; }
+
+.modal-save-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--accent), #7b61ff);
+  color: #000;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  transition: opacity var(--transition), transform 0.12s ease;
+  margin-bottom: 12px;
+}
+.modal-save-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.modal-note {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+/* ─── Change key button (header) ────────────────────────────────────────── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.change-key-btn {
+  font-size: 16px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: color var(--transition), background var(--transition);
+}
+.change-key-btn:hover { color: var(--accent); background: var(--accent-dim); }
+
+/* ─── Shake animation (invalid key) ────────────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.shake { animation: shake 0.5s ease; border-color: #ef4444 !important; }
+
+@media (max-width: 480px) {
+  .modal-card { padding: 28px 20px; }
+  .modal-title { font-size: 18px; }
+}
