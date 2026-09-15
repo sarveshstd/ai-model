@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C Buddy — AI C Programming Assistant</title>
+  <meta name="description" content="An AI-powered C Programming Tutor that explains concepts, writes code, debugs programs, and teaches C from beginner to advanced." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Prism.js — C syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════  SIDEBAR  ═══════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">⚙</span>
+        <span class="logo-text">C Buddy</span>
+      </div>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">✕</button>
+    </div>
+
+    <div class="new-chat-btn-wrap">
+      <button class="new-chat-btn" id="newChatBtn">
+        <span>＋</span> New Chat
+      </button>
+    </div>
+
+    <div class="sidebar-section-label">Quick Topics</div>
+    <div class="topic-list" id="topicList">
+      <!-- Topics injected by app.js -->
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-tag">Powered by Gemini 1.5 Flash</div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════  MAIN  ══════════════════════════════ -->
+  <div class="main-wrap" id="mainWrap">
+
+    <!-- Header -->
+    <header class="app-header">
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+      <div class="header-title">
+        <span class="header-icon">⚙</span>
+        <span>C Buddy</span>
+        <span class="header-badge">AI</span>
+      </div>
+      <div class="header-right">
+        <div class="status-dot" id="statusDot" title="Server status"></div>
+      </div>
+    </header>
+
+    <!-- Chat area -->
+    <main class="chat-area" id="chatArea">
+
+      <!-- Welcome screen (shown until first message) -->
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-glow"></div>
+        <div class="welcome-avatar">⚙</div>
+        <h1 class="welcome-title">C Buddy</h1>
+        <p class="welcome-sub">Your personal AI C Programming Tutor</p>
+
+        <div class="sample-questions-label">Try asking me about…</div>
+        <div class="sample-grid" id="sampleGrid">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages" id="messages"></div>
+
+    </main>
+
+    <!-- Input bar -->
+    <footer class="input-bar">
+      <div class="input-wrap">
+        <textarea
+          id="userInput"
+          class="chat-input"
+          placeholder="Ask C Buddy anything about C programming…"
+          rows="1"
+          spellcheck="true"
+          aria-label="Your message"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" aria-label="Send message" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="input-footer-note">C Buddy can make mistakes. Always test code before submitting.</div>
+    </footer>
+  </div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════════════════════  SCRIPTS  ════════════════════════════ -->
+  <!-- Marked.js — Markdown rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+  <!-- Prism.js core + C language + toolbar plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
