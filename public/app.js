@@ -257,10 +257,10 @@ function bindEvents() {
 
 function onSaveKey() {
   const key = apiKeyInputEl.value.trim();
-  if (!key || !key.startsWith("AIza")) {
+  if (!key || key.length < 20) {
     apiKeyInputEl.classList.add("shake");
     setTimeout(() => apiKeyInputEl.classList.remove("shake"), 600);
-    apiKeyInputEl.placeholder = "Must start with AIza... — get it from aistudio.google.com";
+    apiKeyInputEl.placeholder = "Paste your full Gemini API key from aistudio.google.com";
     return;
   }
   saveApiKey(key);
