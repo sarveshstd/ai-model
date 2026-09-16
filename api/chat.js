@@ -35,6 +35,7 @@ module.exports = async (req, res) => {
 
   // Models to try in order
   const MODELS = [
+    "gemini-3.6-flash",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-flash",
